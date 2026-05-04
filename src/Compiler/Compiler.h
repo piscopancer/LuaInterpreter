@@ -38,7 +38,8 @@ public:
 
     std::vector< Instruction > compile(
         std::shared_ptr<LuaAST::Block> block,
-        const std::string& entry_name = "_start"
+        const std::string& entry_name = "_start",
+        const std::string& initial_prefix = ""
     );
 
     std::vector< Instruction > compile_function(FunctionToCompile &func);

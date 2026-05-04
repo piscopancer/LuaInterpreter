@@ -54,8 +54,11 @@ Compiler::Compiler(std::shared_ptr< LuaAST::Block > ast): statan(ast) {
 
 std::vector< Instruction > Compiler::compile(
     std::shared_ptr<LuaAST::Block> block,
-    const std::string& entry_name
+    const std::string& entry_name,
+    const std::string& initial_prefix
 ) {
+    if (!initial_prefix.empty()) prefixes.push_back(initial_prefix);
+
     LuaAST::FuncBody entry;
     entry.block = block;
     functions_to_compile.push( {
