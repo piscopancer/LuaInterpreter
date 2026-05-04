@@ -38,7 +38,7 @@ return result
 
 
 void Map::include(Interpreter* interp) {
-    compile_and_add_extension(
+    compile_and_add_extension_function(
         interp,
 
         imap_src,
@@ -52,7 +52,7 @@ void Map::include(Interpreter* interp) {
         "imap"
     );
 
-    compile_and_add_extension(
+    compile_and_add_extension_function(
         interp,
 
         map_src,

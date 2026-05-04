@@ -42,6 +42,8 @@ public:
         const std::string& initial_prefix = ""
     );
 
+    std::string get_func_label(const std::string& funcname);
+
     std::vector< Instruction > compile_function(FunctionToCompile &func);
 
     std::vector< Instruction > compile_block(LuaAST::Block *block);

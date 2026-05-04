@@ -125,6 +125,7 @@ std::ostream& operator<<(std::ostream& os, Instruction& inst) {
         case Instruction::Type::HASH:       { os << "HASH" ; } break; 
         case Instruction::Type::NEG:        { os << "NEG" ; } break; 
         case Instruction::Type::NOT:        { os << "NOT" ; } break;
+        case Instruction::Type::BITNOT:        { os << "BITNOT" ; } break;
         
         default: {
             throw std::runtime_error("Unknown instruction type: " + std::to_string((int)inst.type));

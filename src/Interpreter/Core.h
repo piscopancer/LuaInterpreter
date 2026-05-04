@@ -19,6 +19,7 @@
 #include "libs/math/math.h"
 #include "libs/string/string.h"
 #include "libs/coroutine/coroutine.h"
+#include "libs/module/module.h"
 
 namespace LuaInterpreter {
 
@@ -43,10 +44,13 @@ public:
 
     std::unordered_map< cxx_func, std::string > cxx_funcnames;
 
+    std::unordered_map< std::string, std::shared_ptr<Value> > loaded_modules;
+    std::stack< std::string > loading_modules;
+
     std::unordered_map< std::string, size_t > labels;
     std::unordered_map< std::string, std::pair<int, std::string> > func_args;
     
-    void collect_labels();
+    void collect_labels(const std::vector< Instruction >& program, size_t start=0);
 
     Interpreter(
         const std::vector< Instruction >& program

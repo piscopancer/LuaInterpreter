@@ -8,7 +8,16 @@
 namespace LuaInterpreter {
 namespace LuaLibs {
 
-void compile_and_add_extension(
+// returns entrypoint of module
+std::string compile_and_add_extension_module(
+    Interpreter* interp,
+
+    const std::string& source,
+
+    const std::string& modname
+);
+
+void compile_and_add_extension_function(
     Interpreter* interp,
 
     const std::string& source,
@@ -19,7 +28,7 @@ void compile_and_add_extension(
     bool is_method,
     
     const std::string& globalname,
-    const std::string& extensionname
+    const std::string& extensionname // for debug
 );
 
 }; // LuaLibs

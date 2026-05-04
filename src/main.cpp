@@ -5,6 +5,7 @@
 #include "Compiler.h"
 #include "Interpreter.h"
 #include <iomanip>
+#include <filesystem>
 
 std::string red_color = "\e[31m";
 std::string green_color = "\e[32m";
@@ -18,6 +19,14 @@ int main(int argc, char** argv) {
     }
 
     std::string filepath = argv[1];
+    if (!std::filesystem::exists(filepath)) {
+        std::cerr << "No file with such name exists" << std::endl;
+        return 1;
+    }
+    if (!std::filesystem::is_regular_file(filepath)) {
+        std::cerr << "Input must be a regular file" << std::endl;
+        return 1;
+    }
     std::ifstream fd(filepath);
 
     std::string input;

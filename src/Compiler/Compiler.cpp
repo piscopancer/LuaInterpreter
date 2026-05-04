@@ -79,6 +79,10 @@ std::vector< Instruction > Compiler::compile(
     return result;
 }
 
+std::string Compiler::get_func_label(const std::string& funcname) {
+    return get_prefix() + funcname;
+}
+
 std::vector< Instruction > Compiler::compile_function(FunctionToCompile &func) {
     // считаем, что CALL в runtime всё подготовит сам:
     // создаст новый стек
@@ -90,16 +94,16 @@ std::vector< Instruction > Compiler::compile_function(FunctionToCompile &func) {
 
     break_labels = std::stack< std::string >();
     scopes_put = std::stack< size_t > (); scopes_put.push(0);
-    prefixes.push_back(func.funcname);
-    
-    // std::cout << "point 1" << std::endl;
-    
+    std::string funclabel = get_func_label(func.funcname);
+
     result.push_back( 
         Instruction { 
             .type = Instruction::Type::LABEL,
-            .label = func.funcname,
+            .label = funclabel,
         } 
     );
+
+    prefixes.push_back(func.funcname);
 
     // std::cout << "point 2" << std::endl;
     size_t N = func.body->params.size();

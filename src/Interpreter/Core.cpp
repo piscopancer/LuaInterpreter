@@ -23,10 +23,10 @@ void Interpreter::set(const std::string &name, std::shared_ptr<Value> value) {
     global.set(name, value);
 }
 
-void Interpreter::collect_labels() {
-    size_t N = program.size();
-    for (size_t i=0; i<N; i++) {
-        Instruction &inst = program[i];
+void Interpreter::collect_labels(const std::vector< Instruction >& pg, size_t start) {
+    size_t N = pg.size();
+    for (size_t i=start; i<N; i++) {
+        const Instruction &inst = pg[i];
         if (inst.type == Instruction::Type::LABEL) {
             labels[inst.label] = i;
         } else if (inst.type == Instruction::Type::PUT_FUNC) {
@@ -47,8 +47,9 @@ Interpreter::Interpreter(
     LuaLibs::Math::include(this);
     LuaLibs::StringLib::include(this);
     LuaLibs::Coroutine::include(this);
+    LuaLibs::Module::include(this);
     
-    collect_labels();
+    collect_labels(program);
     auto entry = std::make_shared<LuaValue::Function>("_start", 0, "varg");
     workers.push_back(
         std::make_unique<Executioner>(
@@ -131,9 +132,6 @@ Executioner::Executioner(
     this->g = g;
     this->running = true;
     this->tid = tid;
-    // 1 scope
-    scopes.push( { Scope{} } );
-    stacks.push({});
     
     if (entry->func) {
         rets = entry->func(this, args);
@@ -141,6 +139,9 @@ Executioner::Executioner(
         stop = true;
         release_turn();
     } else {
+        // 1 scope
+        scopes.push( { Scope{} } );
+        stacks.push({});
         this->ip = g->labels.at(entry->label);
         callstack.push(entry->label);
         for (auto &arg: args) {
@@ -383,29 +384,6 @@ void Executioner::execute(Instruction* inst) {
             unknown_inst_error = true;
         }
     }
-    // } catch (std::runtime_error& e) {
-    //     if (catches.empty()) {
-    //         std::cerr << "Uncaught error: " << e.what() << std::endl;
-    //         while (!callstack.empty()) {
-    //             std::cerr << "From " << callstack.top() << std::endl;
-    //             callstack.pop();
-    //         }
-    //         throw e;
-    //     }
-
-    //     auto error = std::make_shared<LuaValue::String>( e.what() );
-        
-    //     Catch c = catches.top();
-    //     while (ret_addr.size() != c.ret_addr_size) ret_addr.pop();
-    //     while (scopes.size() != c.scopes_size) scopes.pop();
-    //     while (stacks.size() != c.stacks_size) stacks.pop();
-    //     while (callstack.size() != c.callstack_size) callstack.pop();
-    //     while (to_return.size() != c.to_return_size) to_return.pop();
-    //     ip = c.ip;
-
-    //     stacks.top().push( std::make_shared<LuaValue::Boolean>(false) );
-    //     stacks.top().push( error );
-    // }
     
     if (unknown_inst_error) {
         throw std::runtime_error("Unknown instruction type: " + std::to_string((int)inst->type));
@@ -892,7 +870,11 @@ void Executioner::raw_lua_call(
     // stacks.push({});
     scopes.push( { Scope{} } );
     ret_addr.push(ip);
-    ip = g->labels.at(func->label);
+    try {
+        ip = g->labels.at(func->label);
+    } catch (std::out_of_range &e) {
+        throw std::runtime_error("Cannot find label " + func->label);
+    }
 
     int argsize = reversed_args.size();
     for (int i=0; i< (int)func->arg_N; i++) {
@@ -952,9 +934,10 @@ void Executioner::raw_call(
             // for coroutine & pcall compliance
             // functions that dont put anything on stack right away
             if (
-                func->func != &LuaLibs::Error::pcall &&
-                func->func != &LuaLibs::Coroutine::resume &&
-                func->func != &LuaLibs::Coroutine::yield &&
+                func->func != &LuaLibs::Module::require     &&
+                func->func != &LuaLibs::Error::pcall        &&
+                func->func != &LuaLibs::Coroutine::resume   &&
+                func->func != &LuaLibs::Coroutine::yield    &&
                 true
             ) {
                  result.push_back( std::make_shared<LuaValue::Nil>() );
@@ -977,7 +960,13 @@ void Executioner::raw_call(
             }
         }
 
-        if (func->func != &LuaLibs::Error::pcall) {
+        if (
+            // require && result.empty => skip
+            // require, but result is not empty => pop
+            (func->func != &LuaLibs::Module::require || !result.empty()) &&
+            func->func != &LuaLibs::Error::pcall    &&
+            true
+        ) {
             callstack.pop( );
         }
     } else {
@@ -1104,6 +1093,18 @@ void Executioner::RET(Instruction *inst) {
 
             // success
             values.push_back( std::make_shared<LuaValue::Boolean>(true) );
+        }
+    }
+    if (g->cxx_funcnames.contains( &LuaLibs::Module::require )) {
+        auto requre_name = g->cxx_funcnames.at(&LuaLibs::Module::require);
+        if (callstack.top() == requre_name) {
+            // return out of require
+
+            callstack.pop();
+            // first return - return from module
+            auto module_ = values.back();
+            auto modname = g->loading_modules.top(); g->loading_modules.pop();
+            g->loaded_modules.insert( { modname, module_ } );
         }
     }
     scopes.pop();
