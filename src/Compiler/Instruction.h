@@ -4,6 +4,7 @@
 #include <string>
 #include <variant>
 #include <fstream>
+#include <cstdint>
 #include <stdfloat>
 
 struct Instruction {
