@@ -29,7 +29,7 @@ std::vector< std::shared_ptr<Value> > Module::require (
     }
 
     std::error_code ec;
-    std::string modname = std::filesystem::absolute(filepath, ec).string();
+    std::string modname = std::filesystem::canonical(filepath, ec).string();
     if (ec) {
         throw std::runtime_error("Module:require - Cannot make absolute path from: " + filepath);
     }
