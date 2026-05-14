@@ -1,5 +1,5 @@
 local stat, lib = pcall(function (...)
-    return dynlib.open("dll.dll")
+    return dynlib.open("./dll.dll")
 end) 
 
 if (not stat) then
