@@ -1,4 +1,4 @@
-* 14.05.26
+* 14.05.26 (piscopancer)
 Added os standard library
 Added bitwise operators (<<, >>, &, |, ~) and pow operator (^)
 Added function call with string argument syntax: f "..."
