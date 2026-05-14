@@ -1,4 +1,7 @@
 * 14.05.26
+Added os standard library
+Added bitwise operators (<<, >>, &, |, ~) and pow operator (^)
+Added function call with string argument syntax: f "..."
 Added DLL loading system
 
 * 04.05.26
