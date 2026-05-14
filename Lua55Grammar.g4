@@ -171,7 +171,7 @@ paramlist: namelist (',' vararg)? | vararg ;
 vararg: '...' name? ;
 namelist: name (',' name)* ;
 
-args: '(' explist? ')' ;
+args: '(' explist? ')' | STRING ;
 
 fieldlist: field (field_sep field)* field_sep? ;
 field_sep: ',' | ';' ;

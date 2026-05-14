@@ -45,6 +45,7 @@ Interpreter::Interpreter(
     LuaLibs::Typing::include(this);
     LuaLibs::Error::include(this);
     LuaLibs::Math::include(this);
+    LuaLibs::Os::include(this);
     LuaLibs::StringLib::include(this);
     LuaLibs::Coroutine::include(this);
     LuaLibs::Module::include(this);
@@ -1453,11 +1454,50 @@ void Executioner::TRUEDIV(Instruction *inst) {
     );
 }
 
+static std::int64_t to_int_strict(const std::shared_ptr<LuaValue::Number>& n, const char* op) {
+    if (n->kind == LuaValue::Number::Kind::INT) return n->integer;
+    std::float64_t f = n->floating;
+    if (std::isfinite(f) && std::trunc(f) == f
+        && f >= -9.2233720368547758e18 && f < 9.2233720368547758e18) {
+        return (std::int64_t) f;
+    }
+    throw std::runtime_error(std::string("Interpreter: ") + op + " requires integer operands");
+}
+
+static std::int64_t lua_shift_left(std::int64_t a, std::int64_t n) {
+    if (n >= 64 || n <= -64) return 0;
+    std::uint64_t ua = (std::uint64_t) a;
+    if (n >= 0) return (std::int64_t) (ua << n);
+    return (std::int64_t) (ua >> -n);
+}
+
 void Executioner::SHLEFT(Instruction *inst) {
-    throw std::runtime_error("Interpreter: Shift operations are not supported yet");
-} 
+    auto arg2 = pop_top();
+    auto arg1 = pop_top();
+    auto num1 = to_num(arg1);
+    auto num2 = to_num(arg2);
+    if (!num1 || !num2) {
+        throw std::runtime_error("Interpreter: shift requires numeric operands");
+    }
+    std::int64_t a = to_int_strict(num1, "shift");
+    std::int64_t n = to_int_strict(num2, "shift");
+    stacks.top().push(
+        std::make_shared<LuaValue::Number> (lua_shift_left(a, n))
+    );
+}
 void Executioner::SHRIGHT(Instruction *inst) {
-    throw std::runtime_error("Interpreter: Shift operations are not supported yet");
+    auto arg2 = pop_top();
+    auto arg1 = pop_top();
+    auto num1 = to_num(arg1);
+    auto num2 = to_num(arg2);
+    if (!num1 || !num2) {
+        throw std::runtime_error("Interpreter: shift requires numeric operands");
+    }
+    std::int64_t a = to_int_strict(num1, "shift");
+    std::int64_t n = to_int_strict(num2, "shift");
+    stacks.top().push(
+        std::make_shared<LuaValue::Number> (lua_shift_left(a, -n))
+    );
 }
 
 void Executioner::AND(Instruction *inst) {
@@ -1485,16 +1525,62 @@ void Executioner::OR(Instruction *inst) {
 }
 
 void Executioner::BITAND(Instruction *inst) {
-    throw std::runtime_error("Interpreter: Bit operations are not supported yet");
-} 
+    auto arg2 = pop_top();
+    auto arg1 = pop_top();
+    auto num1 = to_num(arg1);
+    auto num2 = to_num(arg2);
+    if (!num1 || !num2) {
+        throw std::runtime_error("Interpreter: bitwise and requires numeric operands");
+    }
+    std::int64_t a = to_int_strict(num1, "bitwise and");
+    std::int64_t b = to_int_strict(num2, "bitwise and");
+    stacks.top().push(
+        std::make_shared<LuaValue::Number> (a & b)
+    );
+}
 void Executioner::BITOR(Instruction *inst) {
-    throw std::runtime_error("Interpreter: Bit operations are not supported yet");
-} 
+    auto arg2 = pop_top();
+    auto arg1 = pop_top();
+    auto num1 = to_num(arg1);
+    auto num2 = to_num(arg2);
+    if (!num1 || !num2) {
+        throw std::runtime_error("Interpreter: bitwise or requires numeric operands");
+    }
+    std::int64_t a = to_int_strict(num1, "bitwise or");
+    std::int64_t b = to_int_strict(num2, "bitwise or");
+    stacks.top().push(
+        std::make_shared<LuaValue::Number> (a | b)
+    );
+}
 void Executioner::BITXOR(Instruction *inst) {
-    throw std::runtime_error("Interpreter: Bit operations are not supported yet");
+    auto arg2 = pop_top();
+    auto arg1 = pop_top();
+    auto num1 = to_num(arg1);
+    auto num2 = to_num(arg2);
+    if (!num1 || !num2) {
+        throw std::runtime_error("Interpreter: bitwise xor requires numeric operands");
+    }
+    std::int64_t a = to_int_strict(num1, "bitwise xor");
+    std::int64_t b = to_int_strict(num2, "bitwise xor");
+    stacks.top().push(
+        std::make_shared<LuaValue::Number> (a ^ b)
+    );
 }
 void Executioner::POW(Instruction *inst) {
-    throw std::runtime_error("Interpreter: Pow operation is not supported yet");
+    auto arg2 = pop_top();
+    auto arg1 = pop_top();
+    auto num1 = to_num(arg1);
+    auto num2 = to_num(arg2);
+    if (!num1 || !num2) {
+        throw std::runtime_error("Interpreter: exponentiation requires numeric operands");
+    }
+    std::float64_t v1 = (num1->kind == LuaValue::Number::Kind::INT)
+        ? (std::float64_t) num1->integer : num1->floating;
+    std::float64_t v2 = (num2->kind == LuaValue::Number::Kind::INT)
+        ? (std::float64_t) num2->integer : num2->floating;
+    stacks.top().push(
+        std::make_shared<LuaValue::Number> ((std::float64_t) std::pow(v1, v2))
+    );
 }
 
 void Executioner::HASH(Instruction *inst) {
@@ -1546,5 +1632,13 @@ void Executioner::NOT(Instruction *inst) {
 }
 
 void Executioner::BITNOT(Instruction *inst) {
-    throw std::runtime_error("Interpreter: Bit operations are not supported yet");
+    auto arg = pop_top();
+    auto num = to_num(arg);
+    if (!num) {
+        throw std::runtime_error("Interpreter: bitwise not requires a numeric operand");
+    }
+    std::int64_t a = to_int_strict(num, "bitwise not");
+    stacks.top().push(
+        std::make_shared<LuaValue::Number> (~a)
+    );
 }

@@ -35,9 +35,6 @@ luai [PATH]
 * Вызов функций с синтаксисом таблиц 
 `function {...}`
 
-* Вызов функций с синтаксисом строк 
-`function "..."`
-
 ### Компилятор
 Не поддерживается:
 * Присваивание и объявление при количестве значений больше количества аргументов  
@@ -145,6 +142,19 @@ luai [PATH]
     string.sub(s, i, j) -> String  
     string.upper(s) -> String  
 
+##### os
+    os.clock() -> Number
+    os.date(format, time) -> String | Table
+    os.difftime(t2, t1) -> Number
+    os.execute(command) -> Boolean, String, Integer
+    os.exit(code, close) -> (не возвращает)
+    os.getenv(varname) -> String | Nil
+    os.remove(filename) -> Boolean | (Nil, String, Integer)
+    os.rename(oldname, newname) -> Boolean | (Nil, String, Integer)
+    os.setlocale(locale, category) -> String | Nil
+    os.time(table) -> Integer
+    os.tmpname() -> String
+
 #### dynlib
     dynlib.open(path) -> DynHandle
     dynlib.close(handle) -> Nil
@@ -156,10 +166,6 @@ luai [PATH]
 * Индексация таблиц с Nil, Table и Thread
 
 * Установка атрибутов на переменные
-
-* Битовые операторы (<<, >>, &, |, ~)
-
-* Оператор возведения в степень (^)
 
 * Перегрузка операторов:
     - Индексации

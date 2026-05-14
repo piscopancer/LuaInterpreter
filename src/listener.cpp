@@ -841,7 +841,12 @@ void Lua55Listener::exitFuncCall_tail(Lua55GrammarParser::FuncCall_tailContext *
     if (ctx->name()){
         tail->name = ctx->name()->ID()->toString();
     }
-    if (ctx->args()->explist()) {
+    if (ctx->args()->STRING()) {
+        Literal* lit = new Literal;
+        lit->kind = Literal::Kind::STRING;
+        lit->value = ctx->args()->STRING()->toString();
+        tail->args.push_back(std::shared_ptr<Expression>(lit));
+    } else if (ctx->args()->explist()) {
         size_t n = ctx->args()->explist()->exp().size();
         std::stack<Expression*> temp;
         for (size_t i=0; i<n; i++) {
@@ -855,7 +860,7 @@ void Lua55Listener::exitFuncCall_tail(Lua55GrammarParser::FuncCall_tailContext *
             temp.pop();
         }
     }
-    
+
     state.stack.push(tail);
 }
     

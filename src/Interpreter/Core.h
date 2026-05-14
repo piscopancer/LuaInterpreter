@@ -17,6 +17,7 @@
 #include "libs/typing/type.h"
 #include "libs/error/error.h"
 #include "libs/math/math.h"
+#include "libs/os/os.h"
 #include "libs/string/string.h"
 #include "libs/coroutine/coroutine.h"
 #include "libs/module/module.h"
