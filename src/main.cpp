@@ -127,32 +127,42 @@ int main(int argc, char** argv) {
         << "Setting up interpreter"
         << normal_color 
     << std::endl;
-
-    LuaInterpreter::Interpreter interp(bytecode);
-
-    std::cout 
-        << std::endl 
-        << blue_color
-        << "Interpreting..."
-        << normal_color 
-    << std::endl;
-
-    auto result = interp.run();
-
-    if (!result) {
-        std::cerr 
+    
+    {
+        LuaInterpreter::Interpreter interp(bytecode);
+        
+        std::cout 
             << std::endl 
-            << red_color
-            << "Interpretation ended with an error"
+            << blue_color
+            << "Interpreting..."
             << normal_color 
         << std::endl;
-        return 1;
+    
+        auto result = interp.run();
+        
+        
+        if (!result) {
+            std::cerr 
+                << std::endl 
+                << red_color
+                << "Interpretation ended with an error"
+                << normal_color 
+            << std::endl;
+            return 1;
+        }
+        
+        std::cout 
+            << std::endl 
+            << green_color
+            << "Interpretation passed"
+            << normal_color 
+        << std::endl;
     }
 
     std::cout 
         << std::endl 
         << green_color
-        << "Interpretation passed"
+        << "Interpretator put down"
         << normal_color 
     << std::endl;
 

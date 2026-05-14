@@ -48,6 +48,7 @@ Interpreter::Interpreter(
     LuaLibs::StringLib::include(this);
     LuaLibs::Coroutine::include(this);
     LuaLibs::Module::include(this);
+    LuaLibs::Dynlib::include(this);
     
     collect_labels(program);
     auto entry = std::make_shared<LuaValue::Function>("_start", 0, "varg");

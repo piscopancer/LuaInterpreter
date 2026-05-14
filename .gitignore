@@ -3,6 +3,7 @@ antlr4
 generated
 dist
 *.exe
+*.dll
 build
 out
 language.md

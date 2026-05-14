@@ -145,6 +145,12 @@ luai [PATH]
     string.sub(s, i, j) -> String  
     string.upper(s) -> String  
 
+#### dynlib
+    dynlib.open(path) -> DynHandle
+    dynlib.close(handle) -> Nil
+
+    dynhandle:close() -> Nil
+    dynhandle:get() -> Function
 ---
 #### Не поддерживается:
 * Индексация таблиц с Nil, Table и Thread
@@ -180,3 +186,35 @@ luai [PATH]
     t1, t2, t3 = require("mod.lua") -- 1, 2, 3
     t1, t2, t3 = require("mod.lua") -- 1, nil, nil
     ```
+
+## Динамические библиотеки
+ 
+### Написание своих библиотек
+При написании динамических библиотек, необходимо подключить [заголовок связку](./src/Interpreter/libs/dynlib/c_api.h). При этом в коде необходимо предоставить имплементацию функции `void inner_prepare()`, которая вызывается перед загрузкой библиотеки. Все экспортируемые функции должны зарегистрированы при подготовке с помощью функции `void register_function(cxx_func func, const std::string& name)`.
+
+```cpp
+#define DYNLIB_C_API_IMPL
+#include "src/Interpreter/libs/dynlib/c_api.h"
+
+std::vector< std::shared_ptr<Value> > my_dll_function (
+    Executioner* exec,
+    std::vector< std::shared_ptr<Value> > &args 
+) {
+    // ...
+}
+
+void inner_prepare() {
+    register_function((cxx_func) &my_dll_function, "my_dll_function");
+}
+```
+
+Для аллокации значений следует использовать не `std::make_shared`, а функции, представленные в `HostAllocator_t host`, поскольку иначе при выгрузке библиотеки код, относящийся к shared_ptr и значениям (деструкторы) уже не будет существовать, что вызовет неопределённое поведение.
+
+Образец динамической библиотеки и её компиляции представлен в [примерах](./examples/valid/dll/).
+
+### Под капотом
+При вызове `dynlib.open` после загрузки библиотеки:
+1. Устанавливается `HostAllocator_t host` через `void set_allocator(HostAllocator_t host)`
+2. Вызывается `void prepare()`, который перевызывает `void inner_prepare()` (перевызов необходим, тк сам `prepare`, как и все API функции, объявлен как `extern "C"` и позволяет писать только C код внутри)
+3. Вызывется `void insert_registred_functions(void* interp)`, который перевызывается и вставляет в интерпретатор все названия объявленных функций
+4. Находится и сохраняется внутри `DynHandle` функция `void* find_function(const char* name)`, возвращающая адресс зарегестрированной функции по её названию.

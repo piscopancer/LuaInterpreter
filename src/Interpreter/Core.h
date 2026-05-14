@@ -20,6 +20,7 @@
 #include "libs/string/string.h"
 #include "libs/coroutine/coroutine.h"
 #include "libs/module/module.h"
+#include "libs/dynlib/dynlib.h"
 
 namespace LuaInterpreter {
 
