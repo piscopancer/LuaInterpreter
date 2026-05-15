@@ -30,6 +30,8 @@ std::vector< std::shared_ptr<Value> > Iterators::pairs(
     if (args.size() != 1) throw std::runtime_error("Iterators::pairs - Expected exactly 1 argument");
 
     if (args[0]->type() == Value::Type::USERDATA) {
+        throw std::runtime_error("Iterators::pairs - Arbitary pair is not available");
+
         auto ud = std::static_pointer_cast<LuaValue::Userdata>(args[0]);
         auto func_arg = ud->meta.at("__pairs");
 
@@ -54,6 +56,9 @@ std::vector< std::shared_ptr<Value> > Iterators::pairs(
         auto v2 = exec->pop_top();
         auto v1 = exec->pop_top();
         return {v1, v2, v3};
+    }
+    if (args[0]->type() != Value::Type::TABLE) {
+        throw std::runtime_error("Iterators::pairs - cannot iterate over non-table type");
     }
     auto table = std::static_pointer_cast<LuaValue::Table>(args[0]);
     auto func_arg = table->meta.at("__pairs");

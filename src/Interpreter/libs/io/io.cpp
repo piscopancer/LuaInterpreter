@@ -110,6 +110,7 @@ std::vector< std::shared_ptr<Value> > IO::File::write_wrapper(
     std::vector< std::shared_ptr<Value> > &args
 ) {
     auto self = std::static_pointer_cast<File>(args[0]);
+    args.erase(args.begin()); // remove self
     return self->write(exec, args);
 }
 
@@ -230,6 +231,8 @@ std::vector< std::shared_ptr<Value> > IO::File::write (
     std::vector< std::shared_ptr<Value> > &args
 ) {
     ensure_type(typestr);
+
+    // no self reference in args
 
     int bytes = 0;
     size_t N = args.size();

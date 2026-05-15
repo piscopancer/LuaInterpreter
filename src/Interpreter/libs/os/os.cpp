@@ -249,7 +249,7 @@ std::vector<std::shared_ptr<Value>> Os::remove(Executioner* exec, std::vector<st
     }
     int err = errno;
     return {
-        std::make_shared<Nil>(),
+        std::make_shared<Boolean>(false),
         std::make_shared<String>(std::string(name) + ": " + std::strerror(err)),
         std::make_shared<Number>((std::int64_t) err)
     };

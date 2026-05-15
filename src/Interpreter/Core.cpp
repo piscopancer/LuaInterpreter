@@ -1185,7 +1185,9 @@ void Executioner::PUT_BARRIER(Instruction *inst) {
 void Executioner::POP_BARRIER(Instruction *inst) {
     auto &top = stacks.top();
     while (!is_barrier(top)) {
+        #ifdef INTERPRETER_DEBUG
         std::cout << "WARNING: POP_BARRIER had to pop a value!" << std::endl;
+        #endif
         top.pop();
     }
     top.pop();
